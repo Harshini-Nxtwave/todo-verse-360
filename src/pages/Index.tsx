@@ -1,22 +1,11 @@
-
-import { useEffect, useState, Suspense } from "react";
-import dynamic from 'next/dynamic';
+import { useEffect, useState, Suspense, lazy } from "react";
 import VRControls from "@/components/ui/VRControls";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/use-toast";
 import { useTodoStore } from "@/store/todoStore";
 
-// Dynamically import VRScene to reduce initial load time
-const VRScene = dynamic(() => import("@/components/vr/VRScene"), {
-  loading: () => (
-    <div className="w-full h-full flex flex-col items-center justify-center">
-      <LoadingSpinner size={60} className="mb-4" />
-      <h2 className="text-vr-text text-2xl font-bold">Loading VR Environment</h2>
-      <p className="text-vr-text/70 mt-2">Almost ready...</p>
-    </div>
-  ),
-  ssr: false
-});
+// Use React's lazy loading instead of Next.js dynamic
+const VRScene = lazy(() => import("@/components/vr/VRScene"));
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
