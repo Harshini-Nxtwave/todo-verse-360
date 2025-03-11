@@ -129,7 +129,6 @@ const TodoCard: React.FC<TodoCardProps> = ({
               color="#FFFFFF"
               anchorX="center"
               anchorY="middle"
-              font="/fonts/Inter-Bold.ttf"
             >
               ✓
             </Text>
@@ -147,7 +146,6 @@ const TodoCard: React.FC<TodoCardProps> = ({
         color="#FFFFFF"
         anchorX="center"
         anchorY="middle"
-        font="/fonts/Inter-Bold.ttf"
         outlineWidth={0.01}
         outlineColor="#000000"
       >
@@ -174,7 +172,6 @@ const TodoCard: React.FC<TodoCardProps> = ({
         color="#FFFFFF"
         anchorX="center"
         anchorY="middle"
-        font="/fonts/Inter-Bold.ttf"
       >
         {statusText}
       </Text>
@@ -195,7 +192,6 @@ const TodoCard: React.FC<TodoCardProps> = ({
             color="#FFFFFF"
             anchorX="center"
             anchorY="middle"
-            font="/fonts/Inter-Bold.ttf"
           >
             Delete
           </Text>
