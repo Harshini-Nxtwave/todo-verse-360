@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -96,6 +97,46 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-vr-bg text-vr-text m-0 p-0 overflow-hidden;
   }
+
+  canvas {
+    @apply touch-none;
+  }
+}
+
+/* For the text input in VR */
+.vr-input {
+  background: rgba(15, 14, 23, 0.8);
+  border: 2px solid theme('colors.vr.primary');
+  color: theme('colors.vr.text');
+  padding: 10px 15px;
+  border-radius: 8px;
+  outline: none;
+  width: 100%;
+  font-size: 1rem;
+  box-shadow: 0 0 15px rgba(127, 90, 240, 0.3);
+  transition: all 0.3s ease;
+}
+
+.vr-input:focus {
+  box-shadow: 0 0 20px rgba(127, 90, 240, 0.6);
+  border-color: theme('colors.vr.accent');
+}
+
+.vr-button {
+  background: theme('colors.vr.primary');
+  color: theme('colors.vr.text');
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(127, 90, 240, 0.3);
+}
+
+.vr-button:hover {
+  background: theme('colors.vr.accent');
+  box-shadow: 0 0 20px rgba(229, 49, 112, 0.5);
 }
