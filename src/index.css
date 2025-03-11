@@ -103,40 +103,67 @@
   canvas {
     @apply touch-none;
   }
+  
+  /* VR Button Styles */
+  .VRButton {
+    position: fixed !important;
+    bottom: 24px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: #7f5af0 !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px 24px !important;
+    border-radius: 8px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .VRButton:hover {
+    background: #6b4ac8 !important;
+    transform: translateX(-50%) scale(1.05) !important;
+  }
 }
 
-/* For the text input in VR */
+/* Enhanced VR input styles */
 .vr-input {
-  background: rgba(15, 14, 23, 0.8);
-  border: 2px solid theme('colors.vr.primary');
-  color: theme('colors.vr.text');
-  padding: 10px 15px;
+  background: rgba(15, 14, 23, 0.95);
+  border: 2px solid #7f5af0;
+  color: #fffffe;
+  padding: 12px 16px;
   border-radius: 8px;
   outline: none;
   width: 100%;
-  font-size: 1rem;
-  box-shadow: 0 0 15px rgba(127, 90, 240, 0.3);
+  font-size: 1.1rem;
+  box-shadow: 0 0 20px rgba(127, 90, 240, 0.4);
   transition: all 0.3s ease;
 }
 
 .vr-input:focus {
-  box-shadow: 0 0 20px rgba(127, 90, 240, 0.6);
-  border-color: theme('colors.vr.accent');
+  box-shadow: 0 0 30px rgba(127, 90, 240, 0.7);
+  border-color: #9b87f5;
+  transform: scale(1.02);
 }
 
 .vr-button {
-  background: theme('colors.vr.primary');
-  color: theme('colors.vr.text');
+  background: #7f5af0;
+  color: #fffffe;
   border: none;
   border-radius: 8px;
-  padding: 10px 15px;
+  padding: 12px 24px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
   transition: all 0.3s ease;
   box-shadow: 0 0 15px rgba(127, 90, 240, 0.3);
+  text-transform: uppercase;
 }
 
 .vr-button:hover {
-  background: theme('colors.vr.accent');
+  background: #6b4ac8;
   box-shadow: 0 0 20px rgba(229, 49, 112, 0.5);
+  transform: scale(1.05);
 }
+

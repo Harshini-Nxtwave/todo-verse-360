@@ -1,6 +1,7 @@
 
 import { useState, useRef } from 'react';
 import { Text, Box, Html } from '@react-three/drei';
+import { Interactive } from '@react-three/xr';
 import { useTodoStore } from '@/store/todoStore';
 import * as THREE from 'three';
 
@@ -28,43 +29,42 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position }) => {
     <group 
       ref={ref}
       position={position}
-      onClick={() => !isFormOpen && setIsFormOpen(true)}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
       {!isFormOpen ? (
-        // Add Todo Button
-        <group>
-          <Box 
-            args={[3, 1, 0.1]} 
-            castShadow
-          >
-            <meshStandardMaterial 
-              color="#7f5af0"
-              metalness={0.5}
-              roughness={0.2}
-              emissive="#7f5af0"
-              emissiveIntensity={hovered ? 0.5 : 0.2}
-            />
-          </Box>
-          
-          <Text
-            position={[0, 0, 0.06]}
-            fontSize={0.25}
-            color="#ffffff"
-            anchorX="center"
-            anchorY="middle"
-            outlineWidth={0.02}
-            outlineColor="#000000"
-          >
-            + Add New Todo
-          </Text>
-        </group>
+        <Interactive onSelect={() => setIsFormOpen(true)}>
+          <group>
+            <Box 
+              args={[2, 0.6, 0.05]} 
+              castShadow
+            >
+              <meshStandardMaterial 
+                color="#7f5af0"
+                metalness={0.5}
+                roughness={0.2}
+                emissive="#7f5af0"
+                emissiveIntensity={hovered ? 0.5 : 0.2}
+              />
+            </Box>
+            
+            <Text
+              position={[0, 0, 0.06]}
+              fontSize={0.2}
+              color="#ffffff"
+              anchorX="center"
+              anchorY="middle"
+              outlineWidth={0.02}
+              outlineColor="#000000"
+            >
+              + Add New Todo
+            </Text>
+          </group>
+        </Interactive>
       ) : (
-        // Todo Form
         <group>
           <Box 
-            args={[4, 2, 0.1]} 
+            args={[2.5, 1.2, 0.05]} 
             castShadow
           >
             <meshStandardMaterial 
@@ -77,8 +77,8 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position }) => {
           </Box>
           
           <Text
-            position={[0, 0.7, 0.06]}
-            fontSize={0.25}
+            position={[0, 0.4, 0.06]}
+            fontSize={0.15}
             color="#ffffff"
             anchorX="center"
             anchorY="middle"
@@ -88,7 +88,7 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position }) => {
             Create New Todo
           </Text>
           
-          <Html position={[0, 0, 0.1]} transform scale={0.25} rotation-x={0}>
+          <Html position={[0, 0, 0.1]} transform scale={0.15} rotation-x={0}>
             <form onSubmit={handleAddTodo} className="w-[500px]">
               <input
                 type="text"
