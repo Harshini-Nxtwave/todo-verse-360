@@ -7,17 +7,18 @@ import {
   PerspectiveCamera, 
   useTexture,
   Box,
-  Plane
+  Plane,
+  Text
 } from '@react-three/drei';
 import { VRButton, XR, Controllers, Hands } from '@react-three/xr';
 import { useTodoStore } from '@/store/todoStore';
 import TodoCard from './TodoCard';
 import AddTodoForm from './AddTodoForm';
 import * as THREE from 'three';
+import { Vector3 } from 'three';
 
 // Lab Room Component
 const LabRoom = () => {
-  // Create a simple lab environment
   return (
     <group>
       {/* Floor */}
@@ -43,7 +44,7 @@ const LabRoom = () => {
         <meshStandardMaterial color="#FFFFFF" />
       </Plane>
       
-      {/* Walls */}
+      {/* Walls with softer colors */}
       <Plane 
         args={[20, 7]} 
         position={[0, 1.5, -10]}
@@ -67,7 +68,7 @@ const LabRoom = () => {
         rotation={[0, -Math.PI / 2, 0]}
         receiveShadow
       >
-        <meshStandardMaterial color="#F6F6F7" />
+        <meshStandardMaterial color="#D3E4FD" /> {/* Soft blue */}
       </Plane>
       
       <Plane 
@@ -76,12 +77,12 @@ const LabRoom = () => {
         rotation={[0, Math.PI / 2, 0]}
         receiveShadow
       >
-        <meshStandardMaterial color="#F6F6F7" />
+        <meshStandardMaterial color="#D3E4FD" /> {/* Soft blue */}
       </Plane>
       
-      {/* Lab Desk */}
+      {/* Lab desk - more professional looking */}
       <Box 
-        args={[6, 0.1, 2]} 
+        args={[6, 0.1, 2.5]} 
         position={[0, 0, -4]}
         receiveShadow
         castShadow
@@ -94,7 +95,7 @@ const LabRoom = () => {
       </Box>
       
       {/* Desk Legs */}
-      {[[-2.8, -1, -4.8], [2.8, -1, -4.8], [-2.8, -1, -3.2], [2.8, -1, -3.2]].map((pos, i) => (
+      {[[-2.8, -1, -5], [2.8, -1, -5], [-2.8, -1, -3], [2.8, -1, -3]].map((pos, i) => (
         <Box 
           key={i}
           args={[0.1, 2, 0.1]} 
@@ -105,21 +106,34 @@ const LabRoom = () => {
         </Box>
       ))}
       
-      {/* Lab Equipment - Monitor-like display */}
+      {/* Lab Monitor */}
       <Box 
-        args={[2, 1.5, 0.1]} 
-        position={[0, 1.4, -4]}
+        args={[2, 1.2, 0.1]} 
+        position={[0, 1.2, -4]}
         rotation={[0, 0, 0]}
         castShadow
       >
         <meshStandardMaterial 
           color="#0F0E17" 
           emissive="#1EAEDB"
-          emissiveIntensity={0.2}
+          emissiveIntensity={0.1}
           roughness={0.2} 
           metalness={0.8}
         />
       </Box>
+      
+      {/* Add a Todo Dashboard label */}
+      <Text
+        position={[0, 1.5, -4]}
+        fontSize={0.2}
+        color="#FFFFFF"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.01}
+        outlineColor="#000000"
+      >
+        Todo Dashboard
+      </Text>
       
       {/* Monitor Stand */}
       <Box 
@@ -129,6 +143,40 @@ const LabRoom = () => {
       >
         <meshStandardMaterial color="#403E43" />
       </Box>
+      
+      {/* Additional lab equipment - shelves */}
+      <Box 
+        args={[2, 0.1, 1]} 
+        position={[3, 1.5, -9]}
+        castShadow
+      >
+        <meshStandardMaterial color="#8A898C" />
+      </Box>
+      
+      <Box 
+        args={[2, 0.1, 1]} 
+        position={[-3, 1.5, -9]}
+        castShadow
+      >
+        <meshStandardMaterial color="#8A898C" />
+      </Box>
+      
+      {/* Lab decoration items */}
+      <Box 
+        args={[0.3, 0.3, 0.3]} 
+        position={[3, 1.75, -9]}
+        castShadow
+      >
+        <meshStandardMaterial color="#FDE1D3" /> {/* Soft Peach */}
+      </Box>
+      
+      <Box 
+        args={[0.5, 0.2, 0.2]} 
+        position={[-3, 1.75, -9]}
+        castShadow
+      >
+        <meshStandardMaterial color="#E5DEFF" /> {/* Soft Purple */}
+      </Box>
     </group>
   );
 };
@@ -136,6 +184,7 @@ const LabRoom = () => {
 const VRScene: React.FC = () => {
   const { todos, fetchInitialTodos, isLoading } = useTodoStore();
   const [todoAdded, setTodoAdded] = useState(false);
+  const [addButtonPos] = useState(new Vector3(0, 1.6, -2)); // Fixed position for Add button
 
   useEffect(() => {
     fetchInitialTodos();
@@ -187,15 +236,15 @@ const VRScene: React.FC = () => {
           <PerspectiveCamera makeDefault position={[0, 1.6, 2.5]} fov={60} />
           
           {/* Enhanced Lighting */}
-          <ambientLight intensity={0.4} />
+          <ambientLight intensity={0.5} />
           <directionalLight 
             position={[5, 5, 5]} 
-            intensity={0.6} 
+            intensity={0.5} 
             castShadow 
             shadow-mapSize-width={2048}
             shadow-mapSize-height={2048}
           />
-          <pointLight position={[0, 4, 0]} color="#FFFFFF" intensity={0.6} castShadow />
+          <pointLight position={[0, 4, 0]} color="#FFFFFF" intensity={0.4} castShadow />
           
           {/* Lab Room Environment */}
           <Suspense fallback={null}>
@@ -206,7 +255,7 @@ const VRScene: React.FC = () => {
           {/* Todo Cards */}
           {!isLoading && layoutTodos()}
           
-          {/* Add Todo Form */}
+          {/* Add Todo Form - always in the same fixed position */}
           <AddTodoForm 
             position={[0, 1.6, -2]} 
             onTodoAdded={() => setTodoAdded(true)}
