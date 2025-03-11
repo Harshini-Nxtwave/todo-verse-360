@@ -7,14 +7,16 @@ import * as THREE from 'three';
 
 interface AddTodoFormProps {
   position: [number, number, number];
+  onTodoAdded?: () => void;
 }
 
-const AddTodoForm: React.FC<AddTodoFormProps> = ({ position }) => {
+const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
   const { addTodo } = useTodoStore();
   const [hovered, setHovered] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [todoText, setTodoText] = useState('');
   const ref = useRef<THREE.Group>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleAddTodo = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +24,19 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position }) => {
       addTodo(todoText.trim());
       setTodoText('');
       setIsFormOpen(false);
+      if (onTodoAdded) onTodoAdded();
     }
+  };
+
+  // Focus input when form opens
+  const handleOpenForm = () => {
+    setIsFormOpen(true);
+    // Use setTimeout to ensure the HTML has rendered before focusing
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 100);
   };
 
   return (
@@ -33,28 +47,28 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position }) => {
       onPointerOut={() => setHovered(false)}
     >
       {!isFormOpen ? (
-        <Interactive onSelect={() => setIsFormOpen(true)}>
+        <Interactive onSelect={handleOpenForm}>
           <group>
             <Box 
-              args={[2, 0.6, 0.05]} 
+              args={[1.6, 0.5, 0.05]} 
               castShadow
             >
               <meshStandardMaterial 
-                color="#7f5af0"
+                color="#1EAEDB"
                 metalness={0.5}
                 roughness={0.2}
-                emissive="#7f5af0"
-                emissiveIntensity={hovered ? 0.5 : 0.2}
+                emissive="#1EAEDB"
+                emissiveIntensity={hovered ? 0.6 : 0.3}
               />
             </Box>
             
             <Text
               position={[0, 0, 0.06]}
-              fontSize={0.2}
-              color="#ffffff"
+              fontSize={0.15}
+              color="#FFFFFF"
               anchorX="center"
               anchorY="middle"
-              outlineWidth={0.02}
+              outlineWidth={0.01}
               outlineColor="#000000"
             >
               + Add New Todo
@@ -64,31 +78,31 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position }) => {
       ) : (
         <group>
           <Box 
-            args={[2.5, 1.2, 0.05]} 
+            args={[2, 1, 0.05]} 
             castShadow
           >
             <meshStandardMaterial 
-              color="#0f0e17"
+              color="#403E43"
               metalness={0.5}
               roughness={0.2}
-              emissive="#7f5af0"
+              emissive="#1EAEDB"
               emissiveIntensity={0.1}
             />
           </Box>
           
           <Text
-            position={[0, 0.4, 0.06]}
-            fontSize={0.15}
-            color="#ffffff"
+            position={[0, 0.3, 0.06]}
+            fontSize={0.12}
+            color="#FFFFFF"
             anchorX="center"
             anchorY="middle"
-            outlineWidth={0.02}
+            outlineWidth={0.01}
             outlineColor="#000000"
           >
             Create New Todo
           </Text>
           
-          <Html position={[0, 0, 0.1]} transform scale={0.15} rotation-x={0}>
+          <Html position={[0, -0.1, 0.1]} transform scale={0.2} rotation-x={0}>
             <form onSubmit={handleAddTodo} className="w-[500px]">
               <input
                 type="text"
@@ -96,7 +110,7 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position }) => {
                 onChange={(e) => setTodoText(e.target.value)}
                 placeholder="Enter todo text..."
                 className="vr-input mb-4"
-                autoFocus
+                ref={inputRef}
               />
               
               <div className="flex justify-between">
