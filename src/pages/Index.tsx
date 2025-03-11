@@ -1,10 +1,22 @@
 
-import { useEffect, useState } from "react";
-import VRScene from "@/components/vr/VRScene";
+import { useEffect, useState, Suspense } from "react";
+import dynamic from 'next/dynamic';
 import VRControls from "@/components/ui/VRControls";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/use-toast";
 import { useTodoStore } from "@/store/todoStore";
+
+// Dynamically import VRScene to reduce initial load time
+const VRScene = dynamic(() => import("@/components/vr/VRScene"), {
+  loading: () => (
+    <div className="w-full h-full flex flex-col items-center justify-center">
+      <LoadingSpinner size={60} className="mb-4" />
+      <h2 className="text-vr-text text-2xl font-bold">Loading VR Environment</h2>
+      <p className="text-vr-text/70 mt-2">Almost ready...</p>
+    </div>
+  ),
+  ssr: false
+});
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -34,14 +46,19 @@ const Index = () => {
           <p className="text-vr-text/70 mt-2">Preparing your immersive experience...</p>
         </div>
       ) : (
-        <>
+        <Suspense fallback={
+          <div className="w-full h-full flex flex-col items-center justify-center">
+            <LoadingSpinner size={60} className="mb-4" />
+            <h2 className="text-vr-text text-2xl font-bold">Initializing VR</h2>
+          </div>
+        }>
           <VRControls />
           <VRScene />
           
           <div className="absolute bottom-4 left-4 z-10 text-xs text-vr-text/50">
             Navigate with mouse: Click to interact, drag to rotate, scroll to zoom
           </div>
-        </>
+        </Suspense>
       )}
     </div>
   );

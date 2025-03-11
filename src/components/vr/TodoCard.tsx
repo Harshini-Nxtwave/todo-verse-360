@@ -1,5 +1,5 @@
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Text, Box } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { Interactive } from '@react-three/xr';
@@ -30,6 +30,8 @@ const TodoCard: React.FC<TodoCardProps> = ({
   const [hovered, setHovered] = useState(false);
   const originalPosition = useRef(new Vector3(...position));
   const [animateHighlight, setAnimateHighlight] = useState(isNew);
+  const scaleTarget = useRef(new Vector3(1, 1, 1));
+  const currentScale = useRef(new Vector3(1, 1, 1));
   
   // Highlight new todos
   useEffect(() => {
@@ -42,29 +44,36 @@ const TodoCard: React.FC<TodoCardProps> = ({
     }
   }, [isNew]);
   
+  // Optimized frame update - use lerping for smoother transitions
   useFrame((state, delta) => {
     if (!ref.current) return;
     
-    // Hover effect
+    // Set scale target based on hover state
     if (hovered) {
-      ref.current.scale.lerp(new Vector3(1.1, 1.1, 1.1), 0.1);
+      scaleTarget.current.set(1.1, 1.1, 1.1);
     } else {
-      ref.current.scale.lerp(new Vector3(1, 1, 1), 0.1);
+      scaleTarget.current.set(1, 1, 1);
     }
     
-    // New todo highlight animation
-    if (animateHighlight) {
-      const pulseIntensity = (Math.sin(state.clock.getElapsedTime() * 5) + 1) / 2;
-      if (ref.current.children[0] instanceof THREE.Mesh) {
-        const material = ref.current.children[0].material as THREE.MeshStandardMaterial;
-        material.emissiveIntensity = 0.2 + pulseIntensity * 0.8;
-      }
+    // Smooth scale transition
+    currentScale.current.lerp(scaleTarget.current, 0.1);
+    ref.current.scale.copy(currentScale.current);
+    
+    // New todo highlight animation - optimized to reduce calculations
+    if (animateHighlight && ref.current.children[0] instanceof THREE.Mesh) {
+      const material = ref.current.children[0].material as THREE.MeshStandardMaterial;
+      const pulseIntensity = (Math.sin(state.clock.getElapsedTime() * 3) + 1) / 2;
+      material.emissiveIntensity = 0.2 + pulseIntensity * 0.6;
     }
     
-    // Subtle floating animation
+    // Subtle floating animation - optimized with lower frequency
     const time = state.clock.getElapsedTime();
-    const floatY = Math.sin(time * 0.5 + index * 0.5) * 0.03;
-    ref.current.position.y = originalPosition.current.y + floatY;
+    const floatY = Math.sin(time * 0.3 + index * 0.5) * 0.03;
+    
+    // Update position with less jitter
+    if (ref.current) {
+      ref.current.position.y = originalPosition.current.y + floatY;
+    }
   });
 
   const handleComplete = () => {
@@ -81,14 +90,9 @@ const TodoCard: React.FC<TodoCardProps> = ({
   const cardColor = todo.completed ? "#2cb67d" : "#33C3F0";
   const statusText = todo.completed ? "Complete" : "In Progress";
 
-  return (
-    <group 
-      ref={ref}
-      position={position}
-      rotation={rotation}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-    >
+  // Memoize the card content to reduce rerenders
+  const cardContent = useMemo(() => (
+    <>
       <Interactive onSelect={handleComplete}>
         <Box 
           args={[1.6, 0.8, 0.05]} 
@@ -168,6 +172,18 @@ const TodoCard: React.FC<TodoCardProps> = ({
           </Text>
         </group>
       </Interactive>
+    </>
+  ), [todo.title, statusText, cardColor, todo.completed, hovered, animateHighlight, handleComplete, handleDelete]);
+
+  return (
+    <group 
+      ref={ref}
+      position={position}
+      rotation={rotation}
+      onPointerOver={() => setHovered(true)}
+      onPointerOut={() => setHovered(false)}
+    >
+      {cardContent}
     </group>
   );
 };

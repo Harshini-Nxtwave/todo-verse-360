@@ -1,5 +1,5 @@
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useRef, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { 
   OrbitControls, 
@@ -99,7 +99,7 @@ const LabRoom = () => {
         <Box 
           key={i}
           args={[0.1, 2, 0.1]} 
-          position={pos}
+          position={pos as [number, number, number]}
           castShadow
         >
           <meshStandardMaterial color="#403E43" metalness={0.8} roughness={0.2} />
@@ -184,7 +184,9 @@ const LabRoom = () => {
 const VRScene: React.FC = () => {
   const { todos, fetchInitialTodos, isLoading } = useTodoStore();
   const [todoAdded, setTodoAdded] = useState(false);
-  const [addButtonPos] = useState(new Vector3(0, 1.6, -2)); // Fixed position for Add button
+  // Fix: explicitly define as Vector3 instead of array
+  const addButtonPos = useMemo(() => new Vector3(0, 1.6, -2), []);
+  const sceneRef = useRef<THREE.Group>(null);
 
   useEffect(() => {
     fetchInitialTodos();
@@ -200,7 +202,10 @@ const VRScene: React.FC = () => {
     }
   }, [todoAdded]);
 
-  const layoutTodos = () => {
+  // Use memoization to prevent unnecessary recalculations
+  const todoCards = useMemo(() => {
+    if (isLoading) return null;
+    
     // Create a curved wall layout to display todos
     const radius = 3.5;
     const angleStep = Math.PI / (Math.max(6, todos.length));
@@ -226,46 +231,62 @@ const VRScene: React.FC = () => {
         />
       );
     });
-  };
+  }, [todos, isLoading, todoAdded]);
 
   return (
     <>
       <VRButton />
-      <Canvas shadows className="bg-vr-bg" frameloop="demand">
-        <XR>
+      <Canvas 
+        shadows 
+        className="bg-vr-bg" 
+        frameloop="demand"
+        gl={{
+          antialias: true,
+          alpha: false,
+          powerPreference: "high-performance",
+          stencil: false,
+          depth: true
+        }}
+        dpr={[1, 1.5]} // Limit pixel ratio for better performance
+      >
+        <XR frameRate={72}>
           <PerspectiveCamera makeDefault position={[0, 1.6, 2.5]} fov={60} />
           
-          {/* Enhanced Lighting */}
+          {/* Optimized Lighting */}
           <ambientLight intensity={0.5} />
           <directionalLight 
             position={[5, 5, 5]} 
             intensity={0.5} 
             castShadow 
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
+            shadow-mapSize-width={1024}
+            shadow-mapSize-height={1024}
+            shadow-camera-far={20}
+            shadow-camera-near={0.1}
           />
           <pointLight position={[0, 4, 0]} color="#FFFFFF" intensity={0.4} castShadow />
           
           {/* Lab Room Environment */}
           <Suspense fallback={null}>
             <Environment preset="warehouse" />
-            <LabRoom />
+            <group ref={sceneRef}>
+              <LabRoom />
+              
+              {/* Todo Cards */}
+              {todoCards}
+              
+              {/* Add Todo Form - always in the same fixed position */}
+              <AddTodoForm 
+                position={[0, 1.6, -2]} 
+                onTodoAdded={() => setTodoAdded(true)}
+              />
+            </group>
           </Suspense>
-          
-          {/* Todo Cards */}
-          {!isLoading && layoutTodos()}
-          
-          {/* Add Todo Form - always in the same fixed position */}
-          <AddTodoForm 
-            position={[0, 1.6, -2]} 
-            onTodoAdded={() => setTodoAdded(true)}
-          />
           
           {/* VR Controllers */}
           <Controllers />
           <Hands />
           
-          {/* Controls for non-VR mode */}
+          {/* Controls for non-VR mode - optimized */}
           <OrbitControls 
             enableZoom={true}
             enablePan={true}
@@ -276,6 +297,8 @@ const VRScene: React.FC = () => {
             minDistance={1}
             maxDistance={10}
             target={[0, 1, 0]}
+            enableDamping
+            dampingFactor={0.1}
           />
         </XR>
       </Canvas>

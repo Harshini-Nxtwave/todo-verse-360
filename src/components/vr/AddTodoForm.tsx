@@ -1,5 +1,5 @@
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Text, Box, Html } from '@react-three/drei';
 import { Interactive } from '@react-three/xr';
 import { useTodoStore } from '@/store/todoStore';
@@ -19,22 +19,23 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [pulseIntensity, setPulseIntensity] = useState(0.3);
 
-  // Pulse animation for the add button
+  // Optimize pulse animation using a more efficient approach
   useEffect(() => {
     if (!isFormOpen) {
       let intensity = 0.3;
       let increasing = true;
       
+      // Use less frequent updates for better performance
       const pulseInterval = setInterval(() => {
         if (increasing) {
-          intensity += 0.02;
+          intensity += 0.03;
           if (intensity >= 0.8) increasing = false;
         } else {
-          intensity -= 0.02;
+          intensity -= 0.03;
           if (intensity <= 0.3) increasing = true;
         }
         setPulseIntensity(intensity);
-      }, 50);
+      }, 80); // Slower interval for better performance
       
       return () => clearInterval(pulseInterval);
     }
@@ -73,43 +74,10 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFormOpen]);
 
-  return (
-    <group 
-      ref={ref}
-      position={position}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-    >
-      {!isFormOpen ? (
-        <Interactive onSelect={handleOpenForm}>
-          <group>
-            <Box 
-              args={[1.6, 0.6, 0.05]} 
-              castShadow
-            >
-              <meshStandardMaterial 
-                color="#1EAEDB"
-                metalness={0.5}
-                roughness={0.2}
-                emissive="#1EAEDB"
-                emissiveIntensity={hovered ? 0.8 : pulseIntensity}
-              />
-            </Box>
-            
-            <Text
-              position={[0, 0, 0.06]}
-              fontSize={0.18}
-              color="#FFFFFF"
-              anchorX="center"
-              anchorY="middle"
-              outlineWidth={0.01}
-              outlineColor="#000000"
-            >
-              + Add New Todo
-            </Text>
-          </group>
-        </Interactive>
-      ) : (
+  // Memoize form content to prevent unnecessary rerenders
+  const formContent = useMemo(() => {
+    if (isFormOpen) {
+      return (
         <group>
           <Box 
             args={[2.2, 1.2, 0.05]} 
@@ -163,7 +131,49 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
             </form>
           </Html>
         </group>
-      )}
+      );
+    }
+    
+    return (
+      <Interactive onSelect={handleOpenForm}>
+        <group>
+          <Box 
+            args={[1.6, 0.6, 0.05]} 
+            castShadow
+          >
+            <meshStandardMaterial 
+              color="#1EAEDB"
+              metalness={0.5}
+              roughness={0.2}
+              emissive="#1EAEDB"
+              emissiveIntensity={hovered ? 0.8 : pulseIntensity}
+            />
+          </Box>
+          
+          <Text
+            position={[0, 0, 0.06]}
+            fontSize={0.18}
+            color="#FFFFFF"
+            anchorX="center"
+            anchorY="middle"
+            outlineWidth={0.01}
+            outlineColor="#000000"
+          >
+            + Add New Todo
+          </Text>
+        </group>
+      </Interactive>
+    );
+  }, [isFormOpen, todoText, hovered, pulseIntensity, handleOpenForm]);
+
+  return (
+    <group 
+      ref={ref}
+      position={position}
+      onPointerOver={() => setHovered(true)}
+      onPointerOut={() => setHovered(false)}
+    >
+      {formContent}
     </group>
   );
 };
