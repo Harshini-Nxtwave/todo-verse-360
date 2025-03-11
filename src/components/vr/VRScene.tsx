@@ -218,9 +218,9 @@ const VRScene: React.FC = () => {
         const row = Math.floor(i / cardsPerRow);
         const col = i % cardsPerRow;
         
-        const x = startPosition[0] + (col - 1) * gridSpacing;
-        const y = startPosition[1];
-        const z = startPosition[2] + row * gridSpacing;
+        const x = startPosition[0] + (col * gridSpacing);
+        const y = startPosition[1] - (row * gridSpacing);
+        const z = startPosition[2];
         
         return (
           <TodoCard
@@ -255,13 +255,13 @@ const VRScene: React.FC = () => {
     
     return (
       <>
-        {/* Active Todos Section - Moved closer to the player */}
-        {renderSectionHeader("Active Todos", [0, 2.2, -4])}
-        {renderTodoSection(activeTodos.slice(0, 9), [0, 1.5, -3.5], false)}
+        {/* Active Todos Section - Left side */}
+        {renderSectionHeader("Active Todos", [-3, 2.2, -3])}
+        {renderTodoSection(activeTodos.slice(0, 9), [-3, 1.5, -3], false)}
         
-        {/* Completed Todos Section - Moved closer but behind active todos */}
-        {renderSectionHeader("Completed Todos", [0, 0.7, -1])}
-        {renderTodoSection(completedTodos.slice(0, 6), [0, 0, -0.5], true)}
+        {/* Completed Todos Section - Right side */}
+        {renderSectionHeader("Completed Todos", [3, 2.2, -3])}
+        {renderTodoSection(completedTodos.slice(0, 9), [3, 1.5, -3], true)}
       </>
     );
   }, [todos, isLoading, todoAdded]);
@@ -281,7 +281,7 @@ const VRScene: React.FC = () => {
           depth: true
         }}
         dpr={[1, 1.5]}
-        camera={{ position: [0, 2, 2], fov: 75 }} // Adjusted camera position
+        camera={{ position: [0, 2, 2], fov: 75 }}
       >
         <XR>
           <ambientLight intensity={0.5} />
@@ -299,7 +299,7 @@ const VRScene: React.FC = () => {
               <LabRoom />
               {todoCards}
               
-              {/* Add Todo Form - moved to a more visible position */}
+              {/* Add Todo Form - centered between sections */}
               <AddTodoForm 
                 position={[0, 1.6, -3]} 
                 onTodoAdded={() => setTodoAdded(true)}
@@ -319,7 +319,7 @@ const VRScene: React.FC = () => {
             rotateSpeed={0.5}
             minDistance={2}
             maxDistance={12}
-            target={[0, 1.5, -2]} // Updated to look at the todos
+            target={[0, 1.5, -2]}
             enableDamping
             dampingFactor={0.1}
           />
