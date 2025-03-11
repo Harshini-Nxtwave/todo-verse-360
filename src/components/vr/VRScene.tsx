@@ -183,8 +183,8 @@ const LabRoom = () => {
 const VRScene: React.FC = () => {
   const { todos, fetchInitialTodos, isLoading } = useTodoStore();
   const [todoAdded, setTodoAdded] = useState(false);
-  // Fix: explicitly define as Vector3 instead of array
-  const addButtonPos = useMemo(() => new Vector3(0, 1.6, -2), []);
+  // Move add button to a more visible position
+  const addButtonPos = useMemo(() => new Vector3(0, 1.6, -3), []);
   const sceneRef = useRef<THREE.Group>(null);
 
   useEffect(() => {
@@ -255,13 +255,13 @@ const VRScene: React.FC = () => {
     
     return (
       <>
-        {/* Active Todos Section */}
-        {renderSectionHeader("Active Todos", [0, 2.2, 0])}
-        {renderTodoSection(activeTodos.slice(0, 9), [0, 1.5, 0.5], false)}
+        {/* Active Todos Section - Moved closer to the player */}
+        {renderSectionHeader("Active Todos", [0, 2.2, -4])}
+        {renderTodoSection(activeTodos.slice(0, 9), [0, 1.5, -3.5], false)}
         
-        {/* Completed Todos Section */}
-        {renderSectionHeader("Completed Todos", [0, 0.7, 4])}
-        {renderTodoSection(completedTodos.slice(0, 6), [0, 0, 4.5], true)}
+        {/* Completed Todos Section - Moved closer but behind active todos */}
+        {renderSectionHeader("Completed Todos", [0, 0.7, -1])}
+        {renderTodoSection(completedTodos.slice(0, 6), [0, 0, -0.5], true)}
       </>
     );
   }, [todos, isLoading, todoAdded]);
@@ -280,10 +280,9 @@ const VRScene: React.FC = () => {
           stencil: false,
           depth: true
         }}
-        dpr={[1, 1.5]} // Limit pixel ratio for better performance
-        camera={{ position: [0, 3, 7], fov: 60 }} // Adjusted camera position for better overview
+        dpr={[1, 1.5]}
+        camera={{ position: [0, 2, 2], fov: 75 }} // Adjusted camera position
       >
-        {/* Environment setup */}
         <XR>
           <ambientLight intensity={0.5} />
           <directionalLight 
@@ -294,29 +293,23 @@ const VRScene: React.FC = () => {
           />
           
           <Suspense fallback={null}>
-            {/* Environment map for reflections */}
             <Environment preset="city" />
             
             <group ref={sceneRef}>
-              {/* Lab room */}
               <LabRoom />
-              
-              {/* Todo cards - optimized rendering */}
               {todoCards}
               
-              {/* Add Todo Form - always in the same fixed position */}
+              {/* Add Todo Form - moved to a more visible position */}
               <AddTodoForm 
-                position={[0, 1.6, -2]} 
+                position={[0, 1.6, -3]} 
                 onTodoAdded={() => setTodoAdded(true)}
               />
             </group>
           </Suspense>
           
-          {/* VR Controllers */}
           <Controllers />
           <Hands />
           
-          {/* Controls for non-VR mode - optimized for new layout */}
           <OrbitControls 
             enableZoom={true}
             enablePan={true}
@@ -326,7 +319,7 @@ const VRScene: React.FC = () => {
             rotateSpeed={0.5}
             minDistance={2}
             maxDistance={12}
-            target={[0, 1.5, 2]} // Centered between active and completed todos
+            target={[0, 1.5, -2]} // Updated to look at the todos
             enableDamping
             dampingFactor={0.1}
           />
