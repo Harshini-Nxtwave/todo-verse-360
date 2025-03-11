@@ -210,7 +210,8 @@ const VRScene: React.FC = () => {
     const completedTodos = todos.filter(todo => todo.completed);
     
     // Create an organized grid layout
-    const gridSpacing = 1.8; // Spacing between cards
+    const horizontalSpacing = 1.8; // Spacing between cards horizontally
+    const verticalSpacing = 0.8; // Reduced vertical spacing between cards
     const cardsPerRow = 3; // Number of cards per row
     
     const renderTodoSection = (sectionTodos: Todo[], startPosition: [number, number, number], isCompletedSection: boolean) => {
@@ -218,8 +219,8 @@ const VRScene: React.FC = () => {
         const row = Math.floor(i / cardsPerRow);
         const col = i % cardsPerRow;
         
-        const x = startPosition[0] + (col * gridSpacing);
-        const y = startPosition[1] - (row * gridSpacing);
+        const x = startPosition[0] + (col * horizontalSpacing);
+        const y = startPosition[1] - (row * verticalSpacing); // Use smaller vertical spacing
         const z = startPosition[2];
         
         return (
