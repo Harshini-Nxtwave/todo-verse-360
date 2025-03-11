@@ -256,8 +256,8 @@ const VRScene: React.FC = () => {
     return (
       <>
         {/* Active Todos Section - Left side */}
-        {renderSectionHeader("Active Todos", [-3, 2.2, -3])}
-        {renderTodoSection(activeTodos.slice(0, 9), [-3, 1.5, -3], false)}
+        {renderSectionHeader("Active Todos", [-5, 2.2, -4])}
+        {renderTodoSection(activeTodos.slice(0, 9), [-5, 1.5, -4], false)}
         
         {/* Completed Todos Section - Right side */}
         {renderSectionHeader("Completed Todos", [3, 2.2, -3])}
@@ -281,7 +281,7 @@ const VRScene: React.FC = () => {
           depth: true
         }}
         dpr={[1, 1.5]}
-        camera={{ position: [0, 2, 2], fov: 75 }}
+        camera={{ position: [0, 2, 3], fov: 75 }}
       >
         <XR>
           <ambientLight intensity={0.5} />
@@ -319,7 +319,7 @@ const VRScene: React.FC = () => {
             rotateSpeed={0.5}
             minDistance={2}
             maxDistance={12}
-            target={[0, 1.5, -2]}
+            target={[-1, 1.5, -3]}
             enableDamping
             dampingFactor={0.1}
           />
