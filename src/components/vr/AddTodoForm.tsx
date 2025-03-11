@@ -16,16 +16,6 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
   const [todoText, setTodoText] = useState('');
   const ref = useRef<THREE.Group>(null);
   const [pulseIntensity, setPulseIntensity] = useState(0.3);
-  const [showKeyboard, setShowKeyboard] = useState(false);
-
-  // Virtual keyboard layout
-  const keyboardLayout = [
-    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-    ['Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.'],
-    ['Space', 'Backspace']
-  ];
 
   // Optimize pulse animation using a more efficient approach
   useEffect(() => {
@@ -48,29 +38,21 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
     }
   }, [isFormOpen]);
 
-  const handleKeyPress = (key: string) => {
-    if (key === 'Backspace') {
-      setTodoText(prev => prev.slice(0, -1));
-    } else if (key === 'Space') {
-      setTodoText(prev => prev + ' ');
-    } else {
-      setTodoText(prev => prev + key);
-    }
-  };
-
   const handleAddTodo = () => {
     if (todoText.trim()) {
       addTodo(todoText.trim());
       setTodoText('');
       setIsFormOpen(false);
-      setShowKeyboard(false);
       if (onTodoAdded) onTodoAdded();
     }
   };
 
   const handleOpenForm = () => {
     setIsFormOpen(true);
-    setShowKeyboard(true);
+    // Request the native VR keyboard
+    if ('navigator' in window && 'xr' in navigator) {
+      (navigator as any).xr?.requestVirtualKeyboard?.();
+    }
   };
 
   // Memoize form content to prevent unnecessary rerenders
@@ -80,7 +62,7 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
         <group>
           {/* Form Background */}
           <Box 
-            args={[2.5, showKeyboard ? 2.5 : 1.2, 0.05]} 
+            args={[2.2, 1.2, 0.05]} 
             castShadow
           >
             <meshStandardMaterial 
@@ -94,7 +76,7 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
           
           {/* Title */}
           <Text
-            position={[0, showKeyboard ? 1 : 0.4, 0.06]}
+            position={[0, 0.4, 0.06]}
             fontSize={0.15}
             color="#FFFFFF"
             anchorX="center"
@@ -108,7 +90,7 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
           {/* Input Display */}
           <Box
             args={[2, 0.4, 0.02]}
-            position={[0, showKeyboard ? 0.6 : 0, 0.06]}
+            position={[0, 0, 0.06]}
           >
             <meshStandardMaterial
               color="#FFFFFF"
@@ -117,60 +99,32 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
             />
           </Box>
           
-          <Text
-            position={[0, showKeyboard ? 0.6 : 0, 0.08]}
-            fontSize={0.15}
-            color="#000000"
-            anchorX="center"
-            anchorY="middle"
-            maxWidth={1.8}
-          >
-            {todoText || "Enter todo text..."}
-          </Text>
-
-          {/* Virtual Keyboard */}
-          {showKeyboard && (
-            <group position={[0, -0.2, 0.06]}>
-              {keyboardLayout.map((row, rowIndex) => (
-                <group key={rowIndex} position={[0, -rowIndex * 0.25, 0]}>
-                  {row.map((key, keyIndex) => {
-                    const keyWidth = key === 'Space' ? 1 : key === 'Backspace' ? 0.8 : 0.2;
-                    const spacing = 0.22;
-                    const rowOffset = row.length * spacing / 2;
-                    const xPos = keyIndex * spacing - rowOffset + (key === 'Space' ? 0.4 : 0);
-                    
-                    return (
-                      <Interactive key={key} onSelect={() => handleKeyPress(key)}>
-                        <group position={[xPos, 0, 0]}>
-                          <Box args={[keyWidth, 0.2, 0.02]}>
-                            <meshStandardMaterial
-                              color="#666666"
-                              metalness={0.5}
-                              roughness={0.2}
-                              emissive="#666666"
-                              emissiveIntensity={0.2}
-                            />
-                          </Box>
-                          <Text
-                            position={[0, 0, 0.02]}
-                            fontSize={0.08}
-                            color="#FFFFFF"
-                            anchorX="center"
-                            anchorY="middle"
-                          >
-                            {key}
-                          </Text>
-                        </group>
-                      </Interactive>
-                    );
-                  })}
-                </group>
-              ))}
-            </group>
-          )}
+          {/* HTML Input for VR Keyboard */}
+          <Html position={[0, 0, 0.08]} transform>
+            <input
+              type="text"
+              value={todoText}
+              onChange={(e) => setTodoText(e.target.value)}
+              placeholder="Enter todo text..."
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#000',
+                fontSize: '16px',
+                textAlign: 'center',
+                width: '200px',
+                outline: 'none'
+              }}
+              onFocus={() => {
+                if ('navigator' in window && 'xr' in navigator) {
+                  (navigator as any).xr?.requestVirtualKeyboard?.();
+                }
+              }}
+            />
+          </Html>
 
           {/* Action Buttons */}
-          <group position={[0, showKeyboard ? -1.5 : -0.3, 0.06]}>
+          <group position={[0, -0.3, 0.06]}>
             <Interactive onSelect={() => setIsFormOpen(false)}>
               <group position={[-0.6, 0, 0]}>
                 <Box args={[0.5, 0.25, 0.02]}>
@@ -247,7 +201,7 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
         </group>
       </Interactive>
     );
-  }, [isFormOpen, todoText, hovered, pulseIntensity, showKeyboard]);
+  }, [isFormOpen, todoText, hovered, pulseIntensity]);
 
   return (
     <group 
