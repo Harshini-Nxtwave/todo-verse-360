@@ -1,4 +1,3 @@
-
 import { Suspense, useEffect, useState, useRef, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { 
@@ -206,31 +205,65 @@ const VRScene: React.FC = () => {
   const todoCards = useMemo(() => {
     if (isLoading) return null;
     
-    // Create a curved wall layout to display todos
-    const radius = 3.5;
-    const angleStep = Math.PI / (Math.max(6, todos.length));
-    const startAngle = -Math.PI / 2 - (angleStep * (Math.min(todos.length, 12) - 1)) / 2;
+    // Separate active and completed todos
+    const activeTodos = todos.filter(todo => !todo.completed);
+    const completedTodos = todos.filter(todo => todo.completed);
     
-    return todos.slice(0, 12).map((todo, i) => {
-      const angle = startAngle + i * angleStep;
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      
-      // Calculate height based on completion status
-      const y = todo.completed ? 0.5 : 1.5;
-      
+    // Create an organized grid layout
+    const gridSpacing = 1.8; // Spacing between cards
+    const cardsPerRow = 3; // Number of cards per row
+    
+    const renderTodoSection = (sectionTodos: Todo[], startPosition: [number, number, number], isCompletedSection: boolean) => {
+      return sectionTodos.map((todo, i) => {
+        const row = Math.floor(i / cardsPerRow);
+        const col = i % cardsPerRow;
+        
+        const x = startPosition[0] + (col - 1) * gridSpacing;
+        const y = startPosition[1];
+        const z = startPosition[2] + row * gridSpacing;
+        
+        return (
+          <TodoCard
+            key={todo.id}
+            todo={todo}
+            position={[x, y, z]}
+            rotation={[0, 0, 0]}
+            index={i}
+            isNew={todoAdded && !isCompletedSection && i === 0}
+            onTodoAction={() => setTodoAdded(true)}
+          />
+        );
+      });
+    };
+    
+    // Section headers
+    const renderSectionHeader = (text: string, position: [number, number, number]) => {
       return (
-        <TodoCard
-          key={todo.id}
-          todo={todo}
-          position={[x, y, z]}
-          rotation={[0, Math.PI - angle, 0]}
-          index={i}
-          isNew={todoAdded && i === 0}
-          onTodoAction={() => setTodoAdded(true)}
-        />
+        <Text
+          position={position}
+          fontSize={0.25}
+          color="#FFFFFF"
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={0.01}
+          outlineColor="#000000"
+        >
+          {text}
+        </Text>
       );
-    });
+    };
+    
+    return (
+      <>
+        {/* Active Todos Section */}
+        {renderSectionHeader("Active Todos", [0, 2.2, 0])}
+        {renderTodoSection(activeTodos.slice(0, 9), [0, 1.5, 0.5], false)}
+        
+        {/* Completed Todos Section */}
+        {renderSectionHeader("Completed Todos", [0, 0.7, 4])}
+        {renderTodoSection(completedTodos.slice(0, 6), [0, 0, 4.5], true)}
+      </>
+    );
   }, [todos, isLoading, todoAdded]);
 
   return (
@@ -248,30 +281,27 @@ const VRScene: React.FC = () => {
           depth: true
         }}
         dpr={[1, 1.5]} // Limit pixel ratio for better performance
+        camera={{ position: [0, 3, 7], fov: 60 }} // Adjusted camera position for better overview
       >
-        <XR frameRate={72}>
-          <PerspectiveCamera makeDefault position={[0, 1.6, 2.5]} fov={60} />
-          
-          {/* Optimized Lighting */}
+        {/* Environment setup */}
+        <XR>
           <ambientLight intensity={0.5} />
           <directionalLight 
             position={[5, 5, 5]} 
-            intensity={0.5} 
+            intensity={0.8} 
             castShadow 
-            shadow-mapSize-width={1024}
-            shadow-mapSize-height={1024}
-            shadow-camera-far={20}
-            shadow-camera-near={0.1}
+            shadow-mapSize={1024}
           />
-          <pointLight position={[0, 4, 0]} color="#FFFFFF" intensity={0.4} castShadow />
           
-          {/* Lab Room Environment */}
           <Suspense fallback={null}>
-            <Environment preset="warehouse" />
+            {/* Environment map for reflections */}
+            <Environment preset="city" />
+            
             <group ref={sceneRef}>
+              {/* Lab room */}
               <LabRoom />
               
-              {/* Todo Cards */}
+              {/* Todo cards - optimized rendering */}
               {todoCards}
               
               {/* Add Todo Form - always in the same fixed position */}
@@ -286,7 +316,7 @@ const VRScene: React.FC = () => {
           <Controllers />
           <Hands />
           
-          {/* Controls for non-VR mode - optimized */}
+          {/* Controls for non-VR mode - optimized for new layout */}
           <OrbitControls 
             enableZoom={true}
             enablePan={true}
@@ -294,9 +324,9 @@ const VRScene: React.FC = () => {
             zoomSpeed={0.6}
             panSpeed={0.5}
             rotateSpeed={0.5}
-            minDistance={1}
-            maxDistance={10}
-            target={[0, 1, 0]}
+            minDistance={2}
+            maxDistance={12}
+            target={[0, 1.5, 2]} // Centered between active and completed todos
             enableDamping
             dampingFactor={0.1}
           />

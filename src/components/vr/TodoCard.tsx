@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Text, Box } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
@@ -86,16 +85,17 @@ const TodoCard: React.FC<TodoCardProps> = ({
     if (onTodoAction) onTodoAction();
   };
 
-  // Color based on completion status
-  const cardColor = todo.completed ? "#2cb67d" : "#33C3F0";
+  // Enhanced colors based on completion status
+  const cardColor = todo.completed ? "#2cb67d" : "#3A86FF";
   const statusText = todo.completed ? "Complete" : "In Progress";
+  const cardOpacity = todo.completed ? 0.8 : 0.95; // Completed todos slightly more transparent
 
   // Memoize the card content to reduce rerenders
   const cardContent = useMemo(() => (
     <>
       <Interactive onSelect={handleComplete}>
         <Box 
-          args={[1.6, 0.8, 0.05]} 
+          args={[1.5, 0.8, 0.05]} 
           castShadow
         >
           <meshStandardMaterial 
@@ -105,75 +105,104 @@ const TodoCard: React.FC<TodoCardProps> = ({
             emissive={cardColor}
             emissiveIntensity={hovered || animateHighlight ? 0.6 : 0.2}
             transparent
-            opacity={0.9}
+            opacity={cardOpacity}
           />
         </Box>
       </Interactive>
       
-      {/* Status Indicator */}
-      <Box 
-        args={[0.3, 0.3, 0.02]}
-        position={[-0.6, 0.2, 0.06]}
-      >
-        <meshStandardMaterial 
-          color={todo.completed ? "#2cb67d" : "#403E43"}
-          emissive={todo.completed ? "#2cb67d" : "#33C3F0"}
-          emissiveIntensity={0.5}
-        />
-      </Box>
+      {/* Completion Checkbox */}
+      <Interactive onSelect={handleComplete}>
+        <group position={[-0.55, 0.2, 0.06]}>
+          <Box 
+            args={[0.2, 0.2, 0.02]}
+          >
+            <meshStandardMaterial 
+              color={todo.completed ? "#2cb67d" : "#FFFFFF"}
+              emissive={todo.completed ? "#2cb67d" : "#FFFFFF"}
+              emissiveIntensity={0.5}
+            />
+          </Box>
+          {todo.completed && (
+            <Text
+              position={[0, 0, 0.03]}
+              fontSize={0.15}
+              color="#FFFFFF"
+              anchorX="center"
+              anchorY="middle"
+              font="/fonts/Inter-Bold.ttf"
+            >
+              ✓
+            </Text>
+          )}
+        </group>
+      </Interactive>
       
-      {/* Todo Text */}
+      {/* Todo Title - with better readability */}
       <Text
-        position={[0, 0.05, 0.06]}
-        fontSize={0.12}
-        maxWidth={1.4}
+        position={[0.05, 0.15, 0.06]}
+        fontSize={0.13}
+        maxWidth={1.3}
         lineHeight={1.2}
         textAlign="left"
         color="#FFFFFF"
         anchorX="center"
         anchorY="middle"
+        font="/fonts/Inter-Bold.ttf"
         outlineWidth={0.01}
         outlineColor="#000000"
       >
         {todo.title}
       </Text>
       
-      {/* Status Text */}
-      <Text
-        position={[-0.1, -0.25, 0.06]}
-        fontSize={0.08}
-        color="#FFFFFF"
-        anchorX="left"
-        anchorY="middle"
-        outlineWidth={0.01}
-        outlineColor="#000000"
+      {/* Status */}
+      <Box 
+        args={[0.4, 0.15, 0.01]}
+        position={[-0.5, -0.2, 0.06]}
       >
-        Status: {statusText}
+        <meshStandardMaterial 
+          color={todo.completed ? "#2cb67d" : "#FF9800"}
+          emissive={todo.completed ? "#2cb67d" : "#FF9800"}
+          emissiveIntensity={0.3}
+          transparent
+          opacity={0.9}
+        />
+      </Box>
+      
+      <Text
+        position={[-0.5, -0.2, 0.08]}
+        fontSize={0.07}
+        color="#FFFFFF"
+        anchorX="center"
+        anchorY="middle"
+        font="/fonts/Inter-Bold.ttf"
+      >
+        {statusText}
       </Text>
       
       {/* Delete Button */}
       <Interactive onSelect={handleDelete}>
-        <group position={[0.55, -0.25, 0.06]}>
+        <group position={[0.5, -0.2, 0.06]}>
           <Box args={[0.3, 0.15, 0.03]}>
             <meshStandardMaterial 
-              color="#0FA0CE" 
-              emissive="#0FA0CE"
+              color="#FF5A5F" 
+              emissive="#FF5A5F"
               emissiveIntensity={hovered ? 0.5 : 0.2}
             />
           </Box>
           <Text
             position={[0, 0, 0.03]}
-            fontSize={0.06}
+            fontSize={0.07}
             color="#FFFFFF"
             anchorX="center"
             anchorY="middle"
+            font="/fonts/Inter-Bold.ttf"
           >
             Delete
           </Text>
         </group>
       </Interactive>
     </>
-  ), [todo.title, statusText, cardColor, todo.completed, hovered, animateHighlight, handleComplete, handleDelete]);
+  ), [todo.title, statusText, cardColor, cardOpacity, todo.completed, hovered, animateHighlight, handleComplete, handleDelete]);
 
   return (
     <group 
