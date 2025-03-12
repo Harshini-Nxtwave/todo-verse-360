@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Text, Box, Html } from '@react-three/drei';
-import { Interactive } from '@react-three/xr';
+import { Interactive, useXR } from '@react-three/xr';
 import { useTodoStore } from '@/store/todoStore';
 import * as THREE from 'three';
 
@@ -9,84 +9,6 @@ interface AddTodoFormProps {
   onTodoAdded?: () => void;
 }
 
-const VRKeyboard = ({ onKeyPress, onEnter, onBackspace }: { 
-  onKeyPress: (key: string) => void;
-  onEnter: () => void;
-  onBackspace: () => void;
-}) => {
-  const keys = [
-    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-    ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
-  ];
-
-  const specialKeys = [
-    { label: 'Space', width: 2, action: () => onKeyPress(' ') },
-    { label: '⌫', width: 1, action: onBackspace },
-    { label: 'Enter', width: 1, action: onEnter }
-  ];
-
-  return (
-    <group position={[0, -0.8, 0]}>
-      {keys.map((row, rowIndex) => (
-        <group key={rowIndex} position={[0, -rowIndex * 0.3, 0]}>
-          {row.map((key, keyIndex) => {
-            const xOffset = (row.length * 0.35) / 2;
-            return (
-              <Interactive key={key} onSelect={() => onKeyPress(key)}>
-                <group position={[keyIndex * 0.35 - xOffset, 0, 0]}>
-                  <Box args={[0.3, 0.25, 0.05]}>
-                    <meshStandardMaterial color="#444444" />
-                  </Box>
-                  <Text
-                    position={[0, 0, 0.03]}
-                    fontSize={0.15}
-                    color="white"
-                    anchorX="center"
-                    anchorY="middle"
-                  >
-                    {key}
-                  </Text>
-                </group>
-              </Interactive>
-            );
-          })}
-        </group>
-      ))}
-      
-      <group position={[0, -keys.length * 0.3, 0]}>
-        {specialKeys.map((key, index) => {
-          const totalWidth = specialKeys.reduce((acc, k) => acc + k.width, 0) * 0.35;
-          const xOffset = totalWidth / 2;
-          const xPosition = specialKeys
-            .slice(0, index)
-            .reduce((acc, k) => acc + k.width * 0.35, 0);
-          
-          return (
-            <Interactive key={key.label} onSelect={key.action}>
-              <group position={[xPosition - xOffset, 0, 0]}>
-                <Box args={[key.width * 0.35 - 0.05, 0.25, 0.05]}>
-                  <meshStandardMaterial color="#666666" />
-                </Box>
-                <Text
-                  position={[0, 0, 0.03]}
-                  fontSize={0.12}
-                  color="white"
-                  anchorX="center"
-                  anchorY="middle"
-                >
-                  {key.label}
-                </Text>
-              </group>
-            </Interactive>
-          );
-        })}
-      </group>
-    </group>
-  );
-};
-
 const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
   const { addTodo } = useTodoStore();
   const [hovered, setHovered] = useState(false);
@@ -94,8 +16,8 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
   const [todoText, setTodoText] = useState('');
   const ref = useRef<THREE.Group>(null);
   const [pulseIntensity, setPulseIntensity] = useState(0.3);
+  const { session } = useXR();
 
-  // Optimize pulse animation using a more efficient approach
   useEffect(() => {
     if (!isFormOpen) {
       let intensity = 0.3;
@@ -116,14 +38,6 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
     }
   }, [isFormOpen]);
 
-  const handleKeyPress = (key: string) => {
-    setTodoText(prev => prev + key);
-  };
-
-  const handleBackspace = () => {
-    setTodoText(prev => prev.slice(0, -1));
-  };
-
   const handleAddTodo = () => {
     if (todoText.trim()) {
       addTodo(todoText.trim());
@@ -133,18 +47,48 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
     }
   };
 
-  const handleOpenForm = () => {
+  const handleOpenForm = async () => {
     setIsFormOpen(true);
+    
+    // Request the VR keyboard if available
+    if (session) {
+      try {
+        // Try to get the XR input source
+        const inputSource = Array.from(session.inputSources).find(
+          source => source.targetRayMode === 'tracked-pointer'
+        );
+
+        if (inputSource && 'requestVirtualKeyboard' in navigator.xr) {
+          const keyboard = await (navigator.xr as any).requestVirtualKeyboard({
+            inputSource,
+            type: 'text',
+          });
+
+          keyboard.addEventListener('input', (event: any) => {
+            setTodoText(event.data);
+          });
+
+          keyboard.addEventListener('accept', () => {
+            handleAddTodo();
+          });
+
+          keyboard.addEventListener('cancel', () => {
+            setIsFormOpen(false);
+          });
+        }
+      } catch (error) {
+        console.warn('Virtual keyboard not available:', error);
+      }
+    }
   };
 
-  // Memoize form content to prevent unnecessary rerenders
   const formContent = useMemo(() => {
     if (isFormOpen) {
       return (
         <group>
           {/* Form Background */}
           <Box 
-            args={[4, 3, 0.1]} 
+            args={[2.2, 1.2, 0.05]} 
             castShadow
           >
             <meshStandardMaterial 
@@ -158,8 +102,8 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
           
           {/* Title */}
           <Text
-            position={[0, 1.2, 0.06]}
-            fontSize={0.2}
+            position={[0, 0.4, 0.06]}
+            fontSize={0.15}
             color="#FFFFFF"
             anchorX="center"
             anchorY="middle"
@@ -171,8 +115,8 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
           
           {/* Input Display */}
           <Box
-            args={[3.5, 0.4, 0.05]}
-            position={[0, 0.7, 0.06]}
+            args={[2, 0.4, 0.02]}
+            position={[0, 0, 0.06]}
           >
             <meshStandardMaterial
               color="#FFFFFF"
@@ -182,28 +126,21 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
           </Box>
           
           <Text
-            position={[0, 0.7, 0.12]}
-            fontSize={0.2}
+            position={[0, 0, 0.08]}
+            fontSize={0.15}
             color="#000000"
             anchorX="center"
             anchorY="middle"
-            maxWidth={3}
+            maxWidth={1.8}
           >
             {todoText || "Type your todo..."}
           </Text>
 
-          {/* VR Keyboard */}
-          <VRKeyboard 
-            onKeyPress={handleKeyPress}
-            onEnter={handleAddTodo}
-            onBackspace={handleBackspace}
-          />
-
           {/* Action Buttons */}
-          <group position={[0, -1.8, 0.06]}>
+          <group position={[0, -0.3, 0.06]}>
             <Interactive onSelect={() => setIsFormOpen(false)}>
-              <group position={[-0.8, 0, 0]}>
-                <Box args={[0.7, 0.3, 0.05]}>
+              <group position={[-0.6, 0, 0]}>
+                <Box args={[0.5, 0.25, 0.02]}>
                   <meshStandardMaterial
                     color="#FF5A5F"
                     emissive="#FF5A5F"
@@ -211,8 +148,8 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
                   />
                 </Box>
                 <Text
-                  position={[0, 0, 0.03]}
-                  fontSize={0.15}
+                  position={[0, 0, 0.02]}
+                  fontSize={0.1}
                   color="#FFFFFF"
                   anchorX="center"
                   anchorY="middle"
@@ -223,8 +160,8 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
             </Interactive>
 
             <Interactive onSelect={handleAddTodo}>
-              <group position={[0.8, 0, 0]}>
-                <Box args={[0.7, 0.3, 0.05]}>
+              <group position={[0.6, 0, 0]}>
+                <Box args={[0.5, 0.25, 0.02]}>
                   <meshStandardMaterial
                     color="#2cb67d"
                     emissive="#2cb67d"
@@ -232,8 +169,8 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
                   />
                 </Box>
                 <Text
-                  position={[0, 0, 0.03]}
-                  fontSize={0.15}
+                  position={[0, 0, 0.02]}
+                  fontSize={0.1}
                   color="#FFFFFF"
                   anchorX="center"
                   anchorY="middle"
