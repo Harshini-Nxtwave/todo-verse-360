@@ -53,29 +53,38 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ position, onTodoAdded }) => {
     // Request the VR keyboard if available
     if (session) {
       try {
-        // Try to get the XR input source
-        const inputSource = Array.from(session.inputSources).find(
-          source => source.targetRayMode === 'tracked-pointer'
-        );
-
-        if (inputSource && 'requestVirtualKeyboard' in navigator.xr) {
-          const keyboard = await (navigator.xr as any).requestVirtualKeyboard({
-            inputSource,
-            type: 'text',
-          });
-
-          keyboard.addEventListener('input', (event: any) => {
-            setTodoText(event.data);
-          });
-
-          keyboard.addEventListener('accept', () => {
+        // Create a hidden input element
+        const input = document.createElement("input");
+        input.type = "text";
+        input.style.position = "absolute";
+        input.style.top = "-9999px"; // Hide it offscreen
+        document.body.appendChild(input);
+        input.focus();
+        
+        // Add event listeners to handle input and completion
+        input.addEventListener("input", (e) => {
+          setTodoText((e.target as HTMLInputElement).value);
+        });
+        
+        input.addEventListener("blur", () => {
+          // Clean up when done
+          document.body.removeChild(input);
+        });
+        
+        // Handle keyboard events
+        const handleKeyDown = (e: KeyboardEvent) => {
+          if (e.key === 'Enter') {
             handleAddTodo();
-          });
-
-          keyboard.addEventListener('cancel', () => {
+            document.body.removeChild(input);
+            document.removeEventListener('keydown', handleKeyDown);
+          } else if (e.key === 'Escape') {
             setIsFormOpen(false);
-          });
-        }
+            document.body.removeChild(input);
+            document.removeEventListener('keydown', handleKeyDown);
+          }
+        };
+        
+        document.addEventListener('keydown', handleKeyDown);
       } catch (error) {
         console.warn('Virtual keyboard not available:', error);
       }

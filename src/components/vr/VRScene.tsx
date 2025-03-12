@@ -12,7 +12,7 @@ import {
 import { VRButton, XR, Controllers, Hands } from '@react-three/xr';
 import { useTodoStore } from '@/store/todoStore';
 import TodoCard from './TodoCard';
-import AddTodoForm from './AddTodoForm';
+import VRAddTodoForm from './VRAddTodoForm';
 import * as THREE from 'three';
 import { Vector3 } from 'three';
 
@@ -301,7 +301,7 @@ const VRScene: React.FC = () => {
               {todoCards}
               
               {/* Add Todo Form - centered between sections */}
-              <AddTodoForm 
+              <VRAddTodoForm 
                 position={[0, 1.6, -3]} 
                 onTodoAdded={() => setTodoAdded(true)}
               />
